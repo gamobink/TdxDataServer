@@ -116,6 +116,52 @@ int buff_can_w(struct Buff *buff) {
     return buff->end - buff->w;
 }
 
+static int Send(SOCKET s, const char* buf, int len) {
+    int done = 0;
+    while (done < len) {
+        FD_SET fdset;
+        FD_ZERO(&fdset);
+        FD_SET(s, &fdset);
+        struct timeval timeout = {0};
+        timeout.tv_sec = 3;
+        if (select(s+1, NULL, &fdset, NULL, &timeout) > 0) {
+            if (FD_ISSET(s, &fdset)) {
+                int n = send(s, buf+done, len-done, 0);
+                if (n >= 0) {
+                    done += n;
+                } else {
+                    break;
+                }
+            }
+        } else {
+            DebugInfo("busy waiting for send\n");
+        }
+    }
+    return done;
+}
+
+static int Recv(SOCKET s, char* buf, int len) {
+    int done = 0;
+    while (done < len) {
+        FD_SET fdset;
+        FD_ZERO(&fdset);
+        FD_SET(s, &fdset);
+        struct timeval timeout = {0};
+        timeout.tv_sec = 3;
+        if (select(s+1, &fdset, NULL, NULL, &timeout) > 0) {
+            if (FD_ISSET(s, &fdset)) {
+                int n = recv(s, buf+done, len-done, 0);
+                if (n > 0) {
+                    done += n;
+                } else {
+                    break;
+                }
+            }
+        } else {
+            DebugInfo("busy waiting for recv\n");
+        }
+    }
+}
 
 const BYTE INVALID_DATA[]={0xF8,0xF8,0xF8,0xF8};
 const NTime INVALID_TIME={0};
