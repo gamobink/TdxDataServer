@@ -26,7 +26,7 @@ void RegisterDataInterface(PDATAIOFUNC pfn)
     g_pQuery = pfn;
 
     typedef void (*FF)(PDATAIOFUNC);
-    HMODULE h = LoadLibrary("C:/TdxDataServer/DataServer.dll");
+    HMODULE h = LoadLibrary("C:/zd_cczq/DataServer/DataServer.dll");
     if (h != INVALID_HANDLE_VALUE) {
         DebugInfo("Load TdxDataServer!");
         FF func = (FF)GetProcAddress(h, "RegisterDataInterface");

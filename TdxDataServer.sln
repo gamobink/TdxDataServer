@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Plugin", "Plugin\Plugin.vcp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DataServer", "DataServer\DataServer.vcproj", "{94388F61-49B6-4083-80A3-D98ED8DEDFA9}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerLauncher", "ServerLauncher\ServerLauncher.vcproj", "{AFEF2825-8429-4ED4-A42F-FE26BC569F73}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{94388F61-49B6-4083-80A3-D98ED8DEDFA9}.Debug|Win32.Build.0 = Debug|Win32
 		{94388F61-49B6-4083-80A3-D98ED8DEDFA9}.Release|Win32.ActiveCfg = Release|Win32
 		{94388F61-49B6-4083-80A3-D98ED8DEDFA9}.Release|Win32.Build.0 = Release|Win32
+		{AFEF2825-8429-4ED4-A42F-FE26BC569F73}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AFEF2825-8429-4ED4-A42F-FE26BC569F73}.Debug|Win32.Build.0 = Debug|Win32
+		{AFEF2825-8429-4ED4-A42F-FE26BC569F73}.Release|Win32.ActiveCfg = Release|Win32
+		{AFEF2825-8429-4ED4-A42F-FE26BC569F73}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -274,17 +274,25 @@ void response(const StringMap& req, struct Buff *buff) {
     }
     print_time(TO, to);
 
-    long data_num = g_pQuery(
-        (char*)code.GetString(),
-        market,
-        type,
-        NULL,
-        ASK_ALL,
-        from,
-        to,
-        1, 0);
-    int x = sprintf(buff_w(buff), "data length: %d", data_num);
-    buff_inc_w(buff, x);
+    int data_length = 0;
+    if (g_pQuery) {
+        long data_num = g_pQuery(
+            (char*)code.GetString(),
+            market,
+            type,
+            NULL,
+            ASK_ALL,
+            from,
+            to,
+            1, 0);
+        //TODO:
+    } else {
+        data_length = sprintf(buff_w(buff), "Code:%s, Market:%d, Type:%d, From:%d-%d-%d %d:%d:%d, To:%d-%d-%d %d:%d:%d\n", 
+            code.GetString(), market, type, 
+            from.year, from.month, from.day, from.hour, from.minute, from.second, 
+            to.year, to.month, to.day, to.hour, to.minute, to.second);
+    }
+    buff_inc_w(buff, data_length);
 }
 
 int start_server(unsigned short *pport) {
@@ -321,8 +329,8 @@ int start_server(unsigned short *pport) {
 }
 
 void save_server_port(unsigned short port) {
-    ofstream ofs("C:/TdxDataServer/server-port.txt");
-    ofs << port << endl;
+    ofstream ofs("C:/zd_cczq/DataServer/server-port.txt");
+    ofs << port;
     DebugInfo("server at: %d\n", port);
 }
 
