@@ -104,7 +104,7 @@
 
 (query (make-request
 		:market SH
-		:code "600256"
-		:type PER_DAY
-		:from (make-time :month 1 :day 1)
+		:code "600718"
+		:type REPORT_DAT2
+		:from (make-time :day 1)
 		:to (make-time)))

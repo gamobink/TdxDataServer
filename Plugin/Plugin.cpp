@@ -5,6 +5,9 @@
 #include "plugin.h"
 #include <cstdarg>
 #include <stdio.h>
+#include <fstream>
+
+using namespace std;
 
 void DebugInfo(const char* format, ...)
 {
@@ -54,6 +57,11 @@ void GetCopyRightInfo(LPPLUGIN info)
     #pragma warning(default : 4996)
 }
 
+void RecordCode(const char* code) {
+    ofstream ofs("C:/zd_cczq/DataServer/Codes.txt", ios::app);
+    ofs << code << endl;
+}
+
 BOOL InputInfoThenCalc1(char * Code,short nSetCode,int Value[4],short DataType,short nDataNum,BYTE nTQ,unsigned long unused) //按最近数据计算
 {
     BOOL nRet = FALSE;
@@ -63,6 +71,7 @@ BOOL InputInfoThenCalc1(char * Code,short nSetCode,int Value[4],short DataType,s
     LPHISDAT pHisDat = new HISDAT[nDataNum];  //数据缓冲区
     long readnum = g_pQuery(Code,nSetCode,DataType,pHisDat,nDataNum,tmpTime,tmpTime,nTQ,0); 
 */
+    RecordCode(Code);
     return nRet;
 }
 
@@ -76,5 +85,6 @@ BOOL InputInfoThenCalc2(char * Code,short nSetCode,int Value[4],short DataType,N
     LPHISDAT pHisDat = new HISDAT[datanum];
     long readnum = g_pQuery(Code,nSetCode,DataType,pHisDat,datanum,time1,time2,nTQ,0);
     */
+    RecordCode(Code);
     return nRet;
 }

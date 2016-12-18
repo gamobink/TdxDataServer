@@ -237,7 +237,7 @@ NTime parse_time(CString str) {
     return tm;
 }
 
-PDATAIOFUNC	 g_pQuery = NULL;
+PDATAIOFUNC	 g_query = NULL;
 
 const char* CODE = "Code";
 const char* MARKET = "Market";
@@ -274,25 +274,127 @@ void response(const StringMap& req, struct Buff *buff) {
     }
     print_time(TO, to);
 
-    int data_length = 0;
-    if (g_pQuery) {
-        long data_num = g_pQuery(
-            (char*)code.GetString(),
-            market,
-            type,
-            NULL,
-            ASK_ALL,
-            from,
-            to,
-            1, 0);
-        //TODO:
+    if (g_query) {
+        if (type >= PER_MIN5 && type <= PER_PRD_DIY10) {
+            long data_num = g_query(
+                (char*)code.GetString(),
+                market,
+                type,
+                NULL,
+                ASK_ALL,
+                from,
+                to,
+                1, 0);
+            LPHISDAT hist = new HISDAT[data_num];
+            data_num = g_query(
+                (char*)code.GetString(),
+                market,
+                type,
+                hist,
+                data_num,
+                from,
+                to,
+                1, 0);
+            for (long i = 0; i < data_num; i++) {
+                char tmp[512];
+                int data_length = _snprintf(tmp, sizeof(tmp), "Time:%d-%d-%d %d:%d:%d, Open:%f, High:%f, Low:%f, Close:%f, Amount:%f, Volume:%f, Up:%d, Down:%d\n", 
+                    hist[i].Time.year, hist[i].Time.month, hist[i].Time.day,
+                    hist[i].Time.hour, hist[i].Time.minute, hist[i].Time.second,
+                    hist[i].Open, hist[i].High, hist[i].Low, hist[i].Close,
+                    hist[i].Amount, hist[i].fVolume, hist[i].zd.up, hist[i].zd.down);
+                if (data_length >= sizeof(tmp)) {
+                    DebugInfo("data length exceed.\n");
+                    break;
+                }
+                if (data_length > buff_can_w(buff)) {
+                    DebugInfo("buff not enough.\n");
+                    break;
+                }
+                memcpy(buff_w(buff), tmp, data_length);
+                buff_inc_w(buff, data_length);
+            }
+            delete [] hist;
+        } else if (type == REPORT_DAT2) {
+            DebugInfo("REPORT_DAT2 not supported yet.\n");
+        } else if (type == GBINFO_DAT) {
+            GBINFO info = {0};
+            long data_num = g_query(
+                (char*)code.GetString(),
+                market,
+                type,
+                &info,
+                1,
+                from,
+                to,
+                1, 0);
+            char tmp[512];
+            int data_length = _snprintf(tmp, sizeof(tmp), "Zgb:%f, Ltgb:%f\n", info.Zgb, info.Ltgb);
+            if (data_length >= sizeof(tmp)) {
+                DebugInfo("data length exceed.\n");
+                return;
+            }
+            if (data_length > buff_can_w(buff)) {
+                DebugInfo("buff not enough.\n");
+                return;
+            }
+            memcpy(buff_w(buff), tmp, data_length);
+            buff_inc_w(buff, data_length);
+        } else if (type == STKINFO_DAT) {
+            STOCKINFO info = {0};
+            long data_num = g_query(
+                (char*)code.GetString(),
+                market,
+                type,
+                &info,
+                1,
+                from,
+                to,
+                1, 0);
+            char tmp[512];
+            int data_length = _snprintf(tmp, sizeof(tmp), "Name:%s\n", info.Name);
+            if (data_length >= sizeof(tmp)) {
+                DebugInfo("data length exceed.\n");
+                return;
+            }
+            if (data_length > buff_can_w(buff)) {
+                DebugInfo("buff not enough.\n");
+                return;
+            }
+            memcpy(buff_w(buff), tmp, data_length);
+            buff_inc_w(buff, data_length);
+        } else if (type == TPPRICE_DAT) {
+            TPPRICE info = {0};
+            long data_num = g_query(
+                (char*)code.GetString(),
+                market,
+                type,
+                &info,
+                1,
+                from,
+                to,
+                1, 0);
+            char tmp[512];
+            int data_length = _snprintf(tmp, sizeof(tmp), "Close:%f, TPTop:%f, TPBottom:%f\n", info.Close, info.TPTop, info.TPBottom);
+            if (data_length >= sizeof(tmp)) {
+                DebugInfo("data length exceed.\n");
+                return;
+            }
+            if (data_length > buff_can_w(buff)) {
+                DebugInfo("buff not enough.\n");
+                return;
+            }
+            memcpy(buff_w(buff), tmp, data_length);
+            buff_inc_w(buff, data_length);
+        } else {
+            DebugInfo("invalid query type: %d\n", type);
+        }
     } else {
-        data_length = sprintf(buff_w(buff), "Code:%s, Market:%d, Type:%d, From:%d-%d-%d %d:%d:%d, To:%d-%d-%d %d:%d:%d\n", 
+        int data_length = sprintf(buff_w(buff), "Code:%s, Market:%d, Type:%d, From:%d-%d-%d %d:%d:%d, To:%d-%d-%d %d:%d:%d\n", 
             code.GetString(), market, type, 
             from.year, from.month, from.day, from.hour, from.minute, from.second, 
             to.year, to.month, to.day, to.hour, to.minute, to.second);
+        buff_inc_w(buff, data_length);
     }
-    buff_inc_w(buff, data_length);
 }
 
 int start_server(unsigned short *pport) {
@@ -390,6 +492,7 @@ void server_loop(int svr_fd) {
                         StringMap fields;
                         parse_request(buff_r(rbuffs+i), fields);
                         response(fields, wbuffs+idx);
+                        DebugInfo("%d bytes to be sent\n", buff_can_r(wbuffs+idx));
                     }
                     dosth = true;
                 }
@@ -439,7 +542,7 @@ DWORD WINAPI ThreadFuncFirst(LPVOID param)
 NTime tmpTime={0};
 short nDataNum = 5;
 LPHISDAT pHisDat = new HISDAT[nDataNum];  //Êý¾Ý»º³åÇø
-long readnum = g_pQuery(buff_r(rbuffs+i),1,PER_DAY,pHisDat,nDataNum,tmpTime,tmpTime,1,0);
+long readnum = g_query(buff_r(rbuffs+i),1,PER_DAY,pHisDat,nDataNum,tmpTime,tmpTime,1,0);
 for(int i=0;i < readnum;i++)
 {
     int x = sprintf(buff_w(wbuffs+idx), "close: %f\n", pHisDat[i].Close);
@@ -449,8 +552,8 @@ delete []pHisDat;pHisDat=NULL;
 */
 extern "C"  __declspec(dllexport)
 void RegisterDataInterface(PDATAIOFUNC pfn) {
-    if (g_pQuery == NULL) {
-        g_pQuery = pfn;
+    if (g_query == NULL) {
+        g_query = pfn;
         DWORD dwThreadID = 0;
         HANDLE handleFirst = CreateThread(NULL, 0, ThreadFuncFirst, 0, 0, &dwThreadID);
     }
